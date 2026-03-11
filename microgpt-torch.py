@@ -47,7 +47,7 @@ def gpt(tids):
     return F.linear(x, sd['lm_head'])
 
 opt = torch.optim.Adam(params, lr=0.01, betas=(0.85, 0.99), eps=1e-8)
-ne = 40; nd = len(docs); ts = ne * nd
+ne = 10; nd = len(docs); ts = ne * nd
 sch = torch.optim.lr_scheduler.LambdaLR(opt, lr_lambda=lambda s: 1 - s / ts)
 epoch_losses = []
 step = 0
@@ -62,7 +62,7 @@ for ep in range(ne):
         ls += loss.item(); step += 1
     al = ls / nd
     epoch_losses.append(al)
-    print(f'epoch {ep+1:3d}/40 | avg loss {al:.4f}')
+    print(f'epoch {ep+1:3d}/{ne} | avg loss {al:.4f}')
 
 elapsed = time.time() - start
 print(f'\nTraining time: {elapsed:.1f}s ({elapsed/60:.1f} min)')
