@@ -1,4 +1,4 @@
-# microgpt-torch
+# MicroGpt-torch
 
 A minimal GPT implementation in Python + PyTorch, for educational purposes.
 
