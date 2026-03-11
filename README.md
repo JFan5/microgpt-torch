@@ -1,15 +1,17 @@
-# MyGPT
+# microgpt-torch
 
-A minimal GPT implementation from scratch in pure Python, for educational purposes. Inspired by [Andrej Karpathy's makemore](https://github.com/karpathy/makemore).
+A minimal GPT implementation in Python + PyTorch, for educational purposes.
+
+This is the PyTorch + CUDA rewrite of [microgpt.py](https://gist.github.com/karpathy/8627fe009c40f57531cb18360106ce95) by Andrej Karpathy, which is a pure Python implementation using a custom `Value` class for automatic differentiation. This version replaces the scalar-level autograd with PyTorch tensor operations for significantly faster training on GPU.
 
 ## Overview
 
-This project implements a small GPT (Generative Pre-trained Transformer) language model using only Python standard libraries — no PyTorch, no NumPy. It includes:
+This project implements a small GPT (Generative Pre-trained Transformer) language model in a single ~120-line Python file (excluding comments). It uses PyTorch for tensor operations and CUDA acceleration. It includes:
 
-- **Autograd engine**: A `Value` class that supports automatic differentiation via reverse-mode backpropagation
-- **Transformer architecture**: Token/position embeddings, multi-head self-attention, MLP blocks, RMSNorm, and residual connections
-- **Training loop**: Epoch-based training with Adam optimizer and linear learning rate decay
-- **Text generation**: Temperature-controlled sampling to generate new names
+- **Transformer architecture**: Token/position embeddings, multi-head self-attention with causal mask, MLP blocks, RMSNorm, and residual connections
+- **Training loop**: Epoch-based training with `torch.optim.Adam` and linear learning rate decay
+- **Text generation**: Temperature-controlled sampling with `torch.multinomial`
+- **CUDA support**: Automatically uses GPU when available
 
 ## Model Architecture
 
@@ -28,19 +30,19 @@ The model trains on ~32K English names from [names.txt](https://github.com/karpa
 ## Usage
 
 ```bash
-python MyGPT.py
+conda run -n llmstl python microgpt-torch.py
 ```
 
 The script will:
 1. Download the dataset (if not present)
-2. Train the model for 40 epochs
+2. Train the model for 40 epochs on GPU
 3. Generate 20 new "hallucinated" names
 
 ## How It Works
 
 1. **Tokenization**: Each character is mapped to an integer ID (a=0, b=1, ..., z=25, BOS=26)
-2. **Forward pass**: For each token, compute embeddings -> multi-head attention -> MLP -> logits
-3. **Loss**: Cross-entropy loss (negative log probability of the target token)
-4. **Backward pass**: Automatic differentiation computes gradients for all parameters
-5. **Update**: Adam optimizer updates parameters with linear learning rate decay
-6. **Generation**: Sample tokens autoregressively with temperature-controlled softmax
+2. **Forward pass**: Full sequence processed at once — embeddings -> multi-head attention (with causal mask) -> MLP -> logits
+3. **Loss**: `F.cross_entropy` over the entire sequence
+4. **Backward pass**: `loss.backward()` via PyTorch autograd
+5. **Update**: `torch.optim.Adam` with `LambdaLR` linear decay
+6. **Generation**: Autoregressive sampling under `torch.no_grad()` with temperature-controlled softmax
